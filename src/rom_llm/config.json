@@ -1,0 +1,56 @@
+{
+  "module": "ROM",
+  "project": {
+    "project_path": "E:/ROM",
+    "script_paths": ["E:/llm-rom/src/rom_llm/input_ellipse.txt"],
+    "bat_path": "E:/llm-rom/src/rom_llm/test.bat",
+    "results_file": "result.txt",
+    "number_of_cores": 1,
+    "del_data": true,
+    "date": true
+  },
+  "experiment": {
+    "mode": "TRAIN",
+    "n_snapshots": 11,
+    "doe_type": "LHS",
+    "input_scaler": ["StandardScaler", "StandardScaler"],
+    "output_scaler": ["StandardScaler", "StandardScaler"]
+  },
+  "rom_settings": {
+    "rom_type": "GPR"
+  },
+  "variables": {
+    "input_variables": [
+      {
+        "name": "r_a",
+        "bounds": [0.1, 1.0],
+        "script_name": "input_ellipse.txt",
+        "symbol": "=",
+        "line": 4,
+        "position": 2
+      },
+      {
+        "name": "r_b",
+        "bounds": [0.1, 0.5],
+        "script_name": "input_ellipse.txt",
+        "symbol": "=",
+        "line": 5,
+        "position": 2
+      }
+    ],
+    "output_variables": [
+      {
+        "name": "smin",
+        "symbol": " ",
+        "line": 1,
+        "position": 2
+      },
+      {
+        "name": "smax",
+        "symbol": " ",
+        "line": 2,
+        "position": 2
+      }
+    ]
+  }
+}

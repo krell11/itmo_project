@@ -1,0 +1,82 @@
+services:
+    vllm-openai:
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - driver: nvidia
+                          count: 1
+                          capabilities: [gpu]
+        volumes:
+            - ~/.cache/huggingface:/root/.cache/huggingface
+            - ./models:/models
+        environment:
+            - HUGGING_FACE_HUB_TOKEN=${HF_TOKEN}
+            - CUDA_VISIBLE_DEVICES=0
+        ports:
+            - "8000:8000"
+        ipc: host
+        image: vllm/vllm-openai:v0.7.3
+#        command: --model /models/models--deepseek-ai--DeepSeek-R1-Distill-Qwen-1.5B --device cuda --tokenizer deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
+        command: --model /models/Qwen2-5-7B-Q4_K_M/Qwen2.5-7B.Q4_K_M.gguf --device cuda --max-model-len 9347 --max-num-batched-tokens 9347 --quantization gguf
+#        --max-model-len 2864 --gpu_memory_utilization 0.5
+#        command: --model /models/models--microsoft--Phi-4-mini-instruct --device cuda --gpu_memory_utilization 0.89
+#        command: --model /models/models--mistralai--Mistral-7B-v0.1 --device cuda --gpu_memory_utilization 0.9
+#        command: --model /models/models--google--gemma-3-1b-it --device cuda
+        networks:
+            - llm-network
+
+    chromadb:
+        image: chromadb/chroma:0.4.24
+        ports:
+            - "8001:8000"
+        volumes:
+            - ./chroma_data:/chroma/chroma_db
+        environment:
+            - IS_PERSISTENT=TRUE
+            - ALLOW_RESET=TRUE
+            - CHROMA_SERVER_HOST=0.0.0.0
+            - CHROMA_SERVER_HTTP_PORT=8001
+        networks:
+            - llm-network
+        depends_on:
+            - vllm-openai
+    postgres:
+        image: postgres:15-alpine
+        environment:
+            - POSTGRES_PASSWORD=postgres
+            - POSTGRES_USER=postgres
+            - POSTGRES_DB=rom_assistant
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        networks:
+            - llm-network
+        healthcheck:
+            test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+    pgadmin:
+        image: dpage/pgadmin4
+        environment:
+            - PGADMIN_DEFAULT_EMAIL=admin@example.com
+            - PGADMIN_DEFAULT_PASSWORD=admin
+        ports:
+            - "5050:80"
+        volumes:
+            - pgadmin_data:/var/lib/pgadmin
+        networks:
+            - llm-network
+        depends_on:
+            - postgres
+
+networks:
+    llm-network:
+        driver: bridge
+
+
+volumes:
+    postgres_data:
+    pgadmin_data:
